@@ -1,41 +1,104 @@
---// BALL SPAWNER & SKYBOX GUI
-local player = game.Players.LocalPlayer
-local workspace = game:GetService("Workspace")
+--// Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local Debris = game:GetService("Debris")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
 
--- Create GUI
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local mouse = player:GetMouse()
+
+--// GUI
 local gui = Instance.new("ScreenGui")
-gui.Name = "BallSpawnerGui"
+gui.Name = "BallNoclipGUI"
 gui.Parent = game.CoreGui
 
--- Main Frame
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 250, 0, 400)
-frame.Position = UDim2.new(0.5, -125, 0.5, -200)
-frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-frame.BorderSizePixel = 0
-frame.Parent = gui
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 350, 0, 450)
+mainFrame.Position = UDim2.new(0.5, -175, 0.5, -225)
+mainFrame.BackgroundColor3 = Color3.fromRGB(80, 80, 255)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = gui
 
 local uicorner = Instance.new("UICorner")
-uicorner.CornerRadius = UDim.new(0, 10)
-uicorner.Parent = frame
+uicorner.CornerRadius = UDim.new(0, 20)
+uicorner.Parent = mainFrame
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -80, 0, 30)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Ball & Noclip GUI"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = mainFrame
+
+-- Made by label
+local madeBy = Instance.new("TextLabel")
+madeBy.Size = UDim2.new(0, 180, 0, 30)
+madeBy.Position = UDim2.new(1, -230, 0, 0)
+madeBy.BackgroundTransparency = 1
+madeBy.Text = "Made by cosmicgalaxysscripts"
+madeBy.TextColor3 = Color3.fromRGB(255, 255, 255)
+madeBy.Font = Enum.Font.SourceSansItalic
+madeBy.TextSize = 14
+madeBy.TextXAlignment = Enum.TextXAlignment.Left
+madeBy.Parent = mainFrame
+
+-- Close button
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -40, 0, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+closeButton.Text = "X"
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.TextSize = 20
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Parent = mainFrame
+Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 10)
+
+closeButton.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- Minimize button
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 30, 0, 30)
+minimizeButton.Position = UDim2.new(1, -80, 0, 0)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+minimizeButton.Text = "-"
+minimizeButton.Font = Enum.Font.SourceSansBold
+minimizeButton.TextSize = 20
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.Parent = mainFrame
+Instance.new("UICorner", minimizeButton).CornerRadius = UDim.new(0, 10)
+
+local minimized = false
+minimizeButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        mainFrame:TweenSize(UDim2.new(0, 350, 0, 30), Enum.EasingDirection.In, Enum.EasingStyle.Quint, 0.5)
+    else
+        mainFrame:TweenSize(UDim2.new(0, 350, 0, 450), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.5)
+    end
+end)
 
 -- Draggable GUI
 local dragging, dragInput, dragStart, startPos
 local function update(input)
     local delta = input.Position - dragStart
-    frame.Position = UDim2.new(
-        startPos.X.Scale, startPos.X.Offset + delta.X,
-        startPos.Y.Scale, startPos.Y.Offset + delta.Y
-    )
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
 
-frame.InputBegan:Connect(function(input)
+title.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
         dragStart = input.Position
-        startPos = frame.Position
+        startPos = mainFrame.Position
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
@@ -44,7 +107,7 @@ frame.InputBegan:Connect(function(input)
     end
 end)
 
-frame.InputChanged:Connect(function(input)
+title.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement then
         dragInput = input
     end
@@ -56,107 +119,88 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Minimize Button
-local minimizeButton = Instance.new("TextButton")
-minimizeButton.Size = UDim2.new(0, 30, 0, 30)
-minimizeButton.Position = UDim2.new(1, -35, 0, 5)
-minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
-minimizeButton.Text = "-"
-minimizeButton.Font = Enum.Font.SourceSansBold
-minimizeButton.TextSize = 20
-minimizeButton.TextColor3 = Color3.fromRGB(255,255,255)
-minimizeButton.Parent = frame
-
-local minimized = false
-minimizeButton.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    if minimized then
-        frame:TweenSize(UDim2.new(0, 250, 0, 40), Enum.EasingDirection.In, Enum.EasingStyle.Quint, 0.3)
-    else
-        frame:TweenSize(UDim2.new(0, 250, 0, 400), Enum.EasingDirection.Out, Enum.EasingStyle.Quint, 0.3)
-    end
-end)
-
--- Scrolling Frame for buttons
-local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, -20, 1, -50)
-scroll.Position = UDim2.new(0, 10, 0, 40)
-scroll.BackgroundTransparency = 1
-scroll.CanvasSize = UDim2.new(0, 0, 0, 500)
-scroll.ScrollBarThickness = 6
-scroll.Parent = frame
-
-local layout = Instance.new("UIListLayout")
+-- Scrolling Frame
+local scrollingFrame = Instance.new("ScrollingFrame")
+scrollingFrame.Size = UDim2.new(1, -20, 1, -50)
+scrollingFrame.Position = UDim2.new(0, 10, 0, 40)
+scrollingFrame.BackgroundTransparency = 1
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 350)
+scrollingFrame.ScrollBarThickness = 6
+scrollingFrame.Parent = mainFrame
+local layout = Instance.new("UIListLayout", scrollingFrame)
 layout.Padding = UDim.new(0, 10)
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-layout.Parent = scroll
 
--- Ball spawning function
+--// Balls
+local balls = {}
+
 local function spawnBalls(amount)
     for i = 1, amount do
         local ball = Instance.new("Part")
         ball.Shape = Enum.PartType.Ball
         ball.Size = Vector3.new(2,2,2)
-        ball.Position = player.Character and player.Character.HumanoidRootPart.Position + Vector3.new(math.random(-5,5),5,math.random(-5,5)) or Vector3.new(0,10,0)
+        ball.Position = player.Character.HumanoidRootPart.Position + Vector3.new(math.random(-10,10),5,math.random(-10,10))
         ball.Anchored = false
-        ball.CanCollide = true
-        ball.Material = Enum.Material.SmoothPlastic
-        ball.BrickColor = BrickColor.Random()
         ball.Parent = workspace
-
-        -- Small push to scatter
-        local bv = Instance.new("BodyVelocity")
-        bv.Velocity = Vector3.new(math.random(-5,5),0,math.random(-5,5))
-        bv.MaxForce = Vector3.new(4000,0,4000)
-        bv.P = 1000
-        bv.Parent = ball
-        Debris:AddItem(bv,0.1)
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(math.random(-5,5), math.random(5,15), math.random(-5,5))
+        bodyVelocity.MaxForce = Vector3.new(400000,400000,400000)
+        bodyVelocity.Parent = ball
+        table.insert(balls, ball)
     end
 end
 
--- Buttons for different spawn amounts
-local buttonAmounts = {10, 50, 100, 200, 250}
-for _, amount in ipairs(buttonAmounts) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.8, 0, 0, 40)
-    btn.BackgroundColor3 = Color3.fromRGB(math.random(50,255), math.random(50,255), math.random(50,255))
-    btn.Text = "Spawn "..amount
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 20
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Parent = scroll
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0,10)
-    corner.Parent = btn
-
-    btn.MouseButton1Click:Connect(function()
-        spawnBalls(amount)
-    end)
+local function clearBalls()
+    for _, b in ipairs(balls) do
+        if b and b.Parent then
+            b:Destroy()
+        end
+    end
+    balls = {}
 end
 
--- Skybox changer button
-local skyBtn = Instance.new("TextButton")
-skyBtn.Size = UDim2.new(0.8, 0, 0, 40)
-skyBtn.BackgroundColor3 = Color3.fromRGB(100,100,255)
-skyBtn.Text = "Change Skybox"
-skyBtn.Font = Enum.Font.SourceSansBold
-skyBtn.TextSize = 20
-skyBtn.TextColor3 = Color3.fromRGB(255,255,255)
-skyBtn.Parent = scroll
+--// Buttons
+local buttonData = {
+    {text="Spawn 50 Balls", func=function() spawnBalls(50) end},
+    {text="Spawn 100 Balls", func=function() spawnBalls(100) end},
+    {text="Spawn 200 Balls", func=function() spawnBalls(200) end},
+    {text="Spawn 250 Balls", func=function() spawnBalls(250) end},
+    {text="Clear All Balls", func=clearBalls},
+    {text="Fly GUI", func=function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+    end},
+    {text="Noclip", func=function()
+        RunService.Stepped:Connect(function()
+            if character and character:FindFirstChild("HumanoidRootPart") then
+                for _, part in ipairs(character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    end},
+    {text="Change Skybox", func=function()
+        local sky = Instance.new("Sky")
+        sky.SkyboxBk = "rbxassetid://133939598138266"
+        sky.SkyboxDn = "rbxassetid://133939598138266"
+        sky.SkyboxFt = "rbxassetid://133939598138266"
+        sky.SkyboxLf = "rbxassetid://133939598138266"
+        sky.SkyboxRt = "rbxassetid://133939598138266"
+        sky.SkyboxUp = "rbxassetid://133939598138266"
+        sky.Parent = Lighting
+    end},
+}
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0,10)
-corner.Parent = skyBtn
-
-skyBtn.MouseButton1Click:Connect(function()
-    local decalId = "133939598138266"
-    local sky = workspace:FindFirstChildOfClass("Sky") or Instance.new("Sky", workspace)
-    sky.SkyboxBk = "rbxassetid://"..decalId
-    sky.SkyboxDn = "rbxassetid://"..decalId
-    sky.SkyboxFt = "rbxassetid://"..decalId
-    sky.SkyboxLf = "rbxassetid://"..decalId
-    sky.SkyboxRt = "rbxassetid://"..decalId
-    sky.SkyboxUp = "rbxassetid://"..decalId
-end)
-
+for _, data in ipairs(buttonData) do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.9, 0, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(math.random(100,255), math.random(100,255), math.random(100,255))
+    btn.Text = data.text
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 18
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Parent = scrollingFrame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
+    btn.MouseButton1Click:Connect(data.func)
+end
